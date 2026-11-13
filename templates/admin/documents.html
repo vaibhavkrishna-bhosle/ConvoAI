@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Documents{% endblock %}
+{% block heading %}Documents{% endblock %}
+{% block subheading %}<div class="subtitle">Company knowledge for RAG: upload files or add web pages, then they're chunked and embedded automatically</div>{% endblock %}
+{% block appbar_actions %}
+  <md-outlined-button id="open-url"><md-icon slot="icon">add_link</md-icon>Add URL</md-outlined-button>
+{% endblock %}
+{% block content %}
+<div class="grid two">
+  <!-- Upload -->
+  <div class="card">
+    <h2>Upload documents</h2>
+    <md-outlined-select id="upload-collection" label="Add to collection" required style="width:100%">
+      {% for c in collections %}
+      <md-select-option value="{{ c.id }}" {{ 'selected' if loop.first }}>
+        <md-icon slot="start">{{ c.icon }}</md-icon>
+        <div slot="headline">{{ c.name }}</div>
+      </md-select-option>
+      {% endfor %}
+    </md-outlined-select>
+    <label id="dropzone" class="dropzone" tabindex="0">
+      <input id="file-input" type="file" multiple accept="{{ accept }}" hidden>
+      <md-icon class="dz-icon">cloud_upload</md-icon>
+      <strong>Drop files here or click to browse</strong>
+      <span class="muted">PDF, Word (.docx), text or Markdown · up to 50 MB</span>
+    </label>
+    <div id="upload-status" class="muted" style="font-size:13px; margin-top:8px"></div>
+    <p class="muted" style="font-size:12px; margin-top:10px">
+      Chunk size {{ settings.chunk_size }} chars · overlap {{ settings.chunk_overlap }} · embeddings: <span class="mono">{{ settings.embed_model }}</span>
+    </p>
+  </div>
+
+  <!-- Test retrieval -->
+  <div class="card">
+    <h2>Test retrieval</h2>
+    <form id="search-form" class="composer" style="background: var(--md-sys-color-surface-container-high)">
+      <textarea id="search-q" rows="1" placeholder="Ask something the documents should answer…" aria-label="Search query"></textarea>
+      <md-filled-icon-button type="submit" aria-label="Search"><md-icon>search</md-icon></md-filled-icon-button>
+    </form>
+    <p class="muted" style="font-size:12px; margin-top:8px">Shows the top matches from the meaning-based (vector) search and the keyword (BM25) search separately. The chat combines both.</p>
+    <div id="search-results" class="search-results" hidden>
+      <div><h3 class="mini-heading">Vector (meaning)</h3><div id="vector-hits" class="hit-list"></div></div>
+      <div><h3 class="mini-heading">Keyword (BM25)</h3><div id="keyword-hits" class="hit-list"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Library -->
+<div class="card section-gap">
+  <div class="card-head">
+    <h2 style="margin:0">Library</h2>
+    <md-chip-set id="filter-chips">
+      <md-filter-chip label="All" data-collection="" selected></md-filter-chip>
+      {% for c in collections %}
+      <md-filter-chip label="{{ c.name }}" data-collection="{{ c.id }}"><md-icon slot="icon">{{ c.icon }}</md-icon></md-filter-chip>
+      {% endfor %}
+    </md-chip-set>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table doc-table">
+      <thead><tr><th>Document</th><th>Collection</th><th>Status</th><th>Chunks</th><th>Size</th><th>Added</th><th aria-label="Actions"></th></tr></thead>
+      <tbody id="doc-rows"></tbody>
+    </table>
+  </div>
+  <div id="empty" class="history-empty" hidden style="padding:32px">
+    <md-icon>folder_open</md-icon>
+    <div>No documents yet. Upload a file or add a URL to get started.</div>
+  </div>
+</div>
+
+<!-- Add URL dialog -->
+<md-dialog id="url-dialog">
+  <div slot="headline">Add a web page</div>
+  <form slot="content" id="url-form" method="dialog" class="dialog-form">
+    <md-outlined-text-field id="url-input" label="Page URL" type="url" placeholder="https://example.com/policy" required>
+      <md-icon slot="leading-icon">link</md-icon>
+    </md-outlined-text-field>
+    <md-outlined-select id="url-collection" label="Collection" required>
+      {% for c in collections %}
+      <md-select-option value="{{ c.id }}" {{ 'selected' if loop.first }}><div slot="headline">{{ c.name }}</div></md-select-option>
+      {% endfor %}
+    </md-outlined-select>
+    <div id="url-error" class="field-error" hidden></div>
+  </form>
+  <div slot="actions">
+    <md-text-button form="url-form" value="cancel">Cancel</md-text-button>
+    <md-filled-button id="url-submit">Add page</md-filled-button>
+  </div>
+</md-dialog>
+
+<!-- Rename / move dialog -->
+<md-dialog id="edit-dialog">
+  <div slot="headline">Rename or move</div>
+  <form slot="content" id="edit-form" method="dialog" class="dialog-form">
+    <md-outlined-text-field id="edit-title" label="Title (shown in citations)" maxlength="200" required></md-outlined-text-field>
+    <md-outlined-select id="edit-collection" label="Collection">
+      {% for c in collections %}
+      <md-select-option value="{{ c.id }}"><md-icon slot="start">{{ c.icon }}</md-icon><div slot="headline">{{ c.name }}</div></md-select-option>
+      {% endfor %}
+    </md-outlined-select>
+    <div id="edit-error" class="field-error" hidden></div>
+  </form>
+  <div slot="actions">
+    <md-text-button form="edit-form" value="cancel">Cancel</md-text-button>
+    <md-filled-button id="edit-save">Save</md-filled-button>
+  </div>
+</md-dialog>
+
+<!-- Chunks dialog -->
+<md-dialog id="chunks-dialog" class="wide-dialog">
+  <div slot="headline" id="chunks-title">Chunks</div>
+  <div slot="content" id="chunks-body" class="chunk-list"></div>
+  <div slot="actions"><md-text-button id="chunks-close">Close</md-text-button></div>
+</md-dialog>
+
+<!-- Confirm dialog -->
+<md-dialog id="confirm-dialog" type="alert">
+  <div slot="headline" id="confirm-title">Delete document?</div>
+  <div slot="content" id="confirm-text"></div>
+  <div slot="actions">
+    <md-text-button id="confirm-cancel">Cancel</md-text-button>
+    <md-filled-button id="confirm-ok" class="danger">Delete</md-filled-button>
+  </div>
+</md-dialog>
+
+<div id="toast" class="toast" role="status" hidden></div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/documents.js') }}"></script>
+{% endblock %}

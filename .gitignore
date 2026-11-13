@@ -1,0 +1,26 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Secrets / local config
+.env
+data/.secret_key
+data/admin_credentials.txt
+
+# Runtime data
+data/*.db
+data/*.db-*
+data/uploads/
+data/chroma/
+data/models/
+
+# Frontend vendor build (outputs are committed in static/vendor)
+tools/vendor-build/node_modules/
+
+# Editors / OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

@@ -1,0 +1,72 @@
+NIMBUS TECHNOLOGIES - INFORMATION SECURITY GUIDELINES
+Version 2.3, effective 1 June 2026. Owner: Information Security team (security@nimbus.example)
+
+These guidelines apply to everyone who uses Nimbus systems or handles Nimbus or customer data. Breaking them may lead to disciplinary action. If you are unsure about anything, ask the Security team before you act.
+
+
+1. DATA CLASSIFICATION
+
+All information at Nimbus falls into one of four classes:
+
+Public - information already published, such as the website and public pricing page.
+Internal - day-to-day company information, such as this guide and team plans. Do not share outside Nimbus.
+Confidential - customer data, financial results, salary data, source code and contracts. Share only with people who need it for their work.
+Restricted - passwords, encryption keys, production database credentials and personal data of customers. Accessible only to named people; never copy to personal devices or email.
+
+Customer data must never be used for testing or demos. Use the anonymised sandbox data set instead.
+
+
+2. USING PERSONAL DEVICES (BRING YOUR OWN DEVICE)
+
+You may use your personal mobile phone for company email, Slack and calendar only through apps managed by Intune (see the IT Support Guide). Personal laptops and tablets must not be used to access company systems, source code or customer data under any circumstances. Do not forward company email to personal email accounts, and do not store company files in personal cloud storage (personal Google Drive, Dropbox, iCloud).
+
+If your personal phone with company apps is lost, report it to the IT helpdesk (extension 4357) so that the work profile can be wiped. Only company data is removed; personal data is not touched.
+
+
+3. PHISHING AND SUSPICIOUS EMAILS
+
+Phishing emails try to trick you into clicking a link, opening an attachment or sharing your password. Warning signs include urgent requests for money or gift cards, unexpected attachments, sender addresses that look slightly wrong, and requests to sign in through a link.
+
+How to report a phishing email:
+- In Outlook, click the "Report Phishing" button in the toolbar. This sends the email to the Security team and removes it from your inbox.
+- If you can't use the button, forward the email as an attachment to security@nimbus.example.
+- If you clicked a link or entered your password, change your password immediately at password.nimbus.example and call the IT helpdesk on extension 4357. Reporting quickly is what matters; you will not be blamed.
+
+Nimbus will never ask for your password by email, chat or phone.
+
+
+4. ANTIVIRUS AND DEVICE SECURITY
+
+All company laptops run Microsoft Defender for Endpoint as antivirus and endpoint protection, with disk encryption (BitLocker on Windows, FileVault on Mac). Do not disable or uninstall these. Security updates are installed automatically; restart your laptop when prompted and at least once a week.
+
+Lock your screen whenever you leave your desk (Windows key + L, or Control + Command + Q on Mac). Screens lock automatically after 5 minutes of inactivity.
+
+
+5. USB DRIVES AND REMOVABLE MEDIA
+
+USB storage devices are blocked on company laptops. To transfer large files, use the company OneDrive or the secure file transfer service at transfer.nimbus.example. Exceptions for specific roles must be approved by the Security team.
+
+
+6. CLEAN DESK
+
+Do not leave confidential documents on your desk, whiteboards or printers. Use the locked shred bins on every floor for confidential papers. Visitors must be escorted at all times in work areas.
+
+
+7. ACCESS AND PASSWORDS
+
+Never share your password or MFA approvals with anyone, including colleagues and IT staff. Use the company password manager (1Password) for any shared team credentials. Access to production systems requires approval from the system owner and is reviewed every quarter.
+
+
+8. TRAVELLING WITH COMPANY DEVICES
+
+Keep your laptop with you in cabin baggage; never check it in. Use the VPN on public Wi-Fi such as airports and hotels. When travelling outside India, inform the Security team at least one week before, because some countries have restrictions on encrypted devices.
+
+
+9. REPORTING SECURITY INCIDENTS
+
+Report any suspected security incident - lost devices, malware, data sent to the wrong person, or unusual account activity - immediately to security@nimbus.example or the IT helpdesk on extension 4357 (24x7). Data breaches involving personal data must be assessed by the Security team within 24 hours.
+
+
+10. ACCEPTABLE USE
+
+Company systems are for business use; limited personal use (for example checking news during lunch) is fine. Do not install pirated software, mine cryptocurrency, access illegal content, or use company systems for any personal business. Internet usage is monitored for security purposes.

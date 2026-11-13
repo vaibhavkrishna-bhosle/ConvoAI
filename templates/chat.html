@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}Chat{% endblock %}
+{% block heading %}<span id="chat-title">Chat</span>{% endblock %}
+{% block subheading %}<div class="subtitle" id="chat-subtitle">Ask questions about your company documents</div>{% endblock %}
+{% block appbar_actions %}
+  <md-icon-button id="open-history" class="mobile-only" aria-label="Conversation history"><md-icon>history</md-icon></md-icon-button>
+  <md-icon-button id="new-chat-top" aria-label="New chat" title="New chat"><md-icon>edit_square</md-icon></md-icon-button>
+{% endblock %}
+{% block head %}
+<script src="{{ url_for('static', filename='vendor/marked.umd.js') }}"></script>
+{% endblock %}
+{% block content %}
+<div class="chat-layout" id="chat-layout" data-conversation="{{ conversation_id or '' }}">
+  <!-- History -->
+  <aside class="history-pane" id="history" aria-label="Conversation history">
+    <md-filled-tonal-button id="new-chat"><md-icon slot="icon">edit_square</md-icon>New chat</md-filled-tonal-button>
+    <md-outlined-text-field id="history-search" class="history-search" placeholder="Search chats" aria-label="Search chats">
+      <md-icon slot="leading-icon">search</md-icon>
+    </md-outlined-text-field>
+    <nav class="history-list" id="history-list" aria-label="Conversations"></nav>
+    <div class="history-empty" id="history-empty" hidden>
+      <md-icon>history</md-icon>
+      <div>Your conversations will appear here.</div>
+    </div>
+  </aside>
+  <div class="scrim" id="history-scrim" hidden></div>
+
+  <!-- Conversation -->
+  <section class="chat-main">
+    <div class="chat-scroll" id="chat-scroll">
+      <div class="chat-hero" id="hero">
+        <div>
+          <div class="greeting"><span id="greeting">Hello</span>, {{ current_user.name.split()[0] }}</div>
+          <div class="sub">What would you like to know today?</div>
+        </div>
+        <div class="suggestions">
+          {% for icon, text in [
+              ('event_available', 'How many casual leaves do I get per year?'),
+              ('vpn_lock', 'How do I connect to the VPN from home?'),
+              ('sell', 'What discount can I offer on annual plans?'),
+              ('badge', 'What documents do I need for onboarding?')] %}
+          <button class="suggestion" type="button" data-suggestion="{{ text }}">
+            <md-icon>{{ icon }}</md-icon><span>{{ text }}</span><md-ripple></md-ripple>
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="thread" id="thread" aria-live="polite"></div>
+    </div>
+
+    <md-icon-button id="jump-latest" class="jump-latest" hidden aria-label="Scroll to latest"><md-icon>arrow_downward</md-icon></md-icon-button>
+
+    <div class="composer-wrap">
+      {% if collections %}
+      <md-chip-set class="collection-chips compact" aria-label="Search in collection" id="collection-chips">
+        <md-filter-chip label="All" data-collection="" selected><md-icon slot="icon">select_all</md-icon></md-filter-chip>
+        {% for c in collections %}
+        <md-filter-chip label="{{ c.name }}" data-collection="{{ c.id }}" title="{{ c.description }}">
+          <md-icon slot="icon">{{ c.icon }}</md-icon>
+        </md-filter-chip>
+        {% endfor %}
+      </md-chip-set>
+      {% endif %}
+      <form class="composer" id="composer">
+        <md-icon-button type="button" id="autospeak" toggle aria-label="Read answers aloud" title="Read all answers aloud" hidden>
+          <md-icon>volume_off</md-icon><md-icon slot="selected">volume_up</md-icon>
+        </md-icon-button>
+        <textarea id="message" rows="1" placeholder="Ask ConvoAI…" aria-label="Message" maxlength="4000"></textarea>
+        <div class="rec-status" id="rec-status" hidden aria-live="polite">
+          <span class="rec-dot"></span>
+          <span class="rec-meter"><span id="rec-level"></span></span>
+          <span class="rec-text" id="rec-text">Listening…</span>
+          <span class="rec-time mono" id="rec-time">0:00</span>
+        </div>
+        <md-icon-button type="button" id="mic" aria-label="Ask by voice" title="Ask by voice (transcribed on this computer)" disabled>
+          <md-icon>mic</md-icon>
+        </md-icon-button>
+        <md-filled-icon-button type="submit" id="send" aria-label="Send" disabled><md-icon>arrow_upward</md-icon></md-filled-icon-button>
+        <md-filled-tonal-icon-button type="button" id="stop" aria-label="Stop generating" hidden><md-icon>stop</md-icon></md-filled-tonal-icon-button>
+      </form>
+      <div class="composer-note">Answers come only from your documents and cite their sources. Voice is processed on this computer.</div>
+    </div>
+  </section>
+
+  <!-- Sources side sheet -->
+  <aside class="source-sheet" id="source-sheet" aria-label="Sources" hidden>
+    <div class="sheet-head">
+      <h2>Sources</h2>
+      <md-icon-button id="close-sources" aria-label="Close sources"><md-icon>close</md-icon></md-icon-button>
+    </div>
+    <div class="sheet-body" id="source-body"></div>
+  </aside>
+</div>
+
+<!-- Rename dialog -->
+<md-dialog id="rename-dialog">
+  <div slot="headline">Rename chat</div>
+  <form slot="content" id="rename-form" method="dialog" class="dialog-form">
+    <md-outlined-text-field id="rename-input" label="Title" maxlength="80" required></md-outlined-text-field>
+  </form>
+  <div slot="actions">
+    <md-text-button form="rename-form" value="cancel">Cancel</md-text-button>
+    <md-filled-button id="rename-save">Save</md-filled-button>
+  </div>
+</md-dialog>
+
+<!-- Delete dialog -->
+<md-dialog id="delete-dialog" type="alert">
+  <div slot="headline">Delete chat?</div>
+  <div slot="content" id="delete-text"></div>
+  <div slot="actions">
+    <md-text-button id="delete-cancel">Cancel</md-text-button>
+    <md-filled-button id="delete-ok" class="danger">Delete</md-filled-button>
+  </div>
+</md-dialog>
+
+<!-- Conversation menu -->
+<md-menu id="conv-menu" positioning="popover">
+  <md-menu-item id="conv-rename"><md-icon slot="start">edit</md-icon><div slot="headline">Rename</div></md-menu-item>
+  <md-menu-item id="conv-delete"><md-icon slot="start">delete</md-icon><div slot="headline">Delete</div></md-menu-item>
+</md-menu>
+
+<div id="toast" class="toast" role="status" hidden></div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}

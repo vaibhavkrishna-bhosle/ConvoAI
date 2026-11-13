@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block heading %}{{ title }}{% endblock %}
+{% macro body() %}
+<div class="empty-state">
+  <div class="big-icon"><md-icon>{{ 'block' if code == 403 else 'explore_off' }}</md-icon></div>
+  <span class="badge err">Error {{ code }}</span>
+  <h2>{{ title }}</h2>
+  <p>{{ message }}</p>
+  <md-filled-tonal-button href="{{ url_for('chat.index') }}">
+    <md-icon slot="icon">home</md-icon>Go to chat
+  </md-filled-tonal-button>
+</div>
+{% endmacro %}
+{% block content %}{{ body() }}{% endblock %}
+{% block public %}<main class="page">{{ body() }}</main>{% endblock %}

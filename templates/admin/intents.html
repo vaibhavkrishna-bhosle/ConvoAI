@@ -1,0 +1,213 @@
+{% extends "base.html" %}
+{% block title %}Intents{% endblock %}
+{% block heading %}Intents{% endblock %}
+{% block subheading %}<div class="subtitle">Intent classifier: small talk and assistant FAQs answered instantly, everything else goes to documents</div>{% endblock %}
+{% block appbar_actions %}
+  <md-filled-tonal-button id="retrain">
+    <md-icon slot="icon">model_training</md-icon>Retrain
+  </md-filled-tonal-button>
+{% endblock %}
+{% block content %}
+<md-linear-progress id="train-progress" indeterminate style="display:none; margin-bottom:12px"></md-linear-progress>
+
+<div class="grid kpis">
+  <div class="card kpi">
+    <div class="kpi-label"><md-icon>emoji_events</md-icon>Active model</div>
+    <div class="kpi-value" style="font-size:20px; line-height:1.3">{{ algorithm_names.get(active.algorithm, '—') if active else 'Not trained' }}</div>
+  </div>
+  <div class="card kpi">
+    <div class="kpi-label"><md-icon>target</md-icon>Held-out accuracy</div>
+    <div class="kpi-value">{{ '%.1f%%' % (active.test_accuracy * 100) if active and active.test_accuracy is not none else '—' }}</div>
+  </div>
+  <div class="card kpi">
+    <div class="kpi-label"><md-icon>functions</md-icon>Held-out macro F1</div>
+    <div class="kpi-value">{{ '%.3f' % active.test_f1 if active and active.test_f1 is not none else '—' }}</div>
+  </div>
+  <div class="card kpi">
+    <div class="kpi-label"><md-icon>alt_route</md-icon>Router threshold</div>
+    <div class="kpi-value">{{ threshold }}</div>
+  </div>
+  <div class="card kpi">
+    <div class="kpi-label"><md-icon>dataset</md-icon>Training data</div>
+    <div class="kpi-value" style="font-size:20px; line-height:1.3">{{ active.n_samples if active else 0 }} patterns<br><span class="muted" style="font-size:14px">{{ active.n_intents if active else intents|length }} intents</span></div>
+  </div>
+</div>
+
+<div class="grid two section-gap">
+  <!-- Try it -->
+  <div class="card">
+    <h2>Try a message</h2>
+    <form id="try-form" class="composer" style="background: var(--md-sys-color-surface-container-high)">
+      <textarea id="try-text" rows="1" placeholder="e.g. hey there, or how many sick leaves do I get?" aria-label="Test message"></textarea>
+      <md-filled-icon-button type="submit" aria-label="Classify"><md-icon>science</md-icon></md-filled-icon-button>
+    </form>
+    <div id="try-result" class="try-result" hidden>
+      <div class="route-line">
+        <span id="route-badge" class="badge"></span>
+        <span class="muted mono" id="latency"></span>
+      </div>
+      <div id="reply" class="reply-bubble" hidden></div>
+      <h3 class="mini-heading">Top predictions</h3>
+      <div id="top" class="bars"></div>
+      <h3 class="mini-heading">NLP pipeline</h3>
+      <dl id="steps" class="steps"></dl>
+    </div>
+  </div>
+
+  <!-- Comparison -->
+  <div class="card">
+    <h2>Model comparison</h2>
+    {% if compare %}
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Model</th><th>CV F1</th><th>Test acc.</th><th>Test F1</th></tr></thead>
+        <tbody>
+        {% for r in compare|sort(attribute='algorithm') %}
+          <tr class="{{ 'is-active' if r.is_active }}">
+            <td>{{ algorithm_names.get(r.algorithm, r.algorithm) }}{% if r.is_active %} <span class="badge ok">Active</span>{% endif %}
+              <div class="muted mono" style="font-size:12px">{{ r.params }}</div></td>
+            <td>{{ '%.3f' % r.f1 }}</td>
+            <td>{{ '%.3f' % r.test_accuracy if r.test_accuracy is not none else '—' }}</td>
+            <td>{{ '%.3f' % r.test_f1 if r.test_f1 is not none else '—' }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="font-size:13px; margin-top:12px">
+      CV = stratified 5-fold cross-validation on training patterns. Test = unseen phrasings in
+      <span class="mono">data/intent_test.json</span>. Trained {{ active.trained_at }} UTC.
+      The full report, with the confusion matrix and threshold sweep, is in <span class="mono">data/models/intent_report.md</span>.
+    </p>
+    {% else %}
+    <p class="muted">No model trained yet. Click <strong>Retrain</strong>.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Knowledge base -->
+<div class="card section-gap">
+  <div class="card-head">
+    <h2 style="margin:0">Knowledge base · <span id="intent-count">{{ intents|length }}</span> intents</h2>
+    <div class="head-actions">
+      <md-outlined-text-field id="intent-search" class="compact-search" placeholder="Search intents" aria-label="Search intents">
+        <md-icon slot="leading-icon">search</md-icon>
+      </md-outlined-text-field>
+      <md-text-button href="/api/intents/export" download><md-icon slot="icon">download</md-icon>Export JSON</md-text-button>
+      <md-filled-button id="new-intent"><md-icon slot="icon">add</md-icon>New intent</md-filled-button>
+    </div>
+  </div>
+  <div class="flash warn-flash" id="dirty-banner" {{ '' if intents_dirty else 'hidden' }}>
+    <md-icon>model_training</md-icon>
+    <span class="flash-text">Intents changed since the model was trained. Retrain to apply your edits to the chat.</span>
+    <md-filled-tonal-button id="retrain-inline">Retrain now</md-filled-tonal-button>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table intent-table">
+      <thead><tr><th>Intent</th><th>Description</th><th>Patterns</th><th>Responses</th><th>Example</th><th aria-label="Actions"></th></tr></thead>
+      <tbody id="intent-rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Intent editor -->
+<md-dialog id="intent-dialog" class="wide-dialog">
+  <div slot="headline" id="intent-dialog-title">New intent</div>
+  <form slot="content" id="intent-form" method="dialog" class="dialog-form">
+    <div class="form-row">
+      <md-outlined-text-field id="i-tag" label="Tag" placeholder="e.g. office_hours" maxlength="41" required
+        supporting-text="Lowercase letters, digits and underscores"></md-outlined-text-field>
+      <label class="switch-row"><md-switch id="i-active" selected></md-switch> Active</label>
+    </div>
+    <md-outlined-text-field id="i-description" label="Description" maxlength="200"></md-outlined-text-field>
+    <md-outlined-text-field id="i-patterns" label="Example patterns, one per line" type="textarea" rows="7"
+      supporting-text="Different ways people say it. At least 2; 10–20 is better."></md-outlined-text-field>
+    <md-outlined-text-field id="i-responses" label="Responses, one per line" type="textarea" rows="4"
+      supporting-text="One is picked at random. Placeholders: {name} {time} {date} {day} {collections}"></md-outlined-text-field>
+    <div id="i-error" class="field-error" hidden></div>
+  </form>
+  <div slot="actions">
+    <md-text-button id="i-delete" class="danger-text" hidden><md-icon slot="icon">delete</md-icon>Delete</md-text-button>
+    <span style="flex:1"></span>
+    <md-text-button form="intent-form" value="cancel">Cancel</md-text-button>
+    <md-filled-button id="i-save">Save</md-filled-button>
+  </div>
+</md-dialog>
+{% endblock %}
+{% block scripts %}
+<script type="module">
+  import { csrfToken } from '{{ url_for("static", filename="js/app.js") }}';
+
+  const form = document.getElementById('try-form');
+  const box = document.getElementById('try-text');
+  const out = document.getElementById('try-result');
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); form.requestSubmit(); }
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const text = box.value.trim();
+    if (!text) return;
+    const res = await fetch('/api/intent/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken() },
+      body: JSON.stringify({ text }),
+    });
+    const r = await res.json();
+    if (!res.ok) { alert(r.error || 'Request failed'); return; }
+
+    out.hidden = false;
+    const badge = document.getElementById('route-badge');
+    if (r.route === 'intent') {
+      badge.className = 'badge ok';
+      badge.textContent = `Intent · ${r.intent} ${r.confidence.toFixed(2)}`;
+    } else {
+      badge.className = 'badge primary';
+      badge.textContent = r.intent === 'doc_query'
+        ? `Documents (RAG) · doc_query ${r.confidence.toFixed(2)}`
+        : `Documents (RAG) · low confidence ${r.confidence.toFixed(2)} < ${r.threshold}`;
+    }
+    document.getElementById('latency').textContent = `${r.latency_ms} ms · ${r.algorithm}`;
+
+    const reply = document.getElementById('reply');
+    reply.hidden = !r.reply;
+    reply.textContent = r.reply || '';
+
+    document.getElementById('top').innerHTML = r.top.map((t) => `
+      <div class="bar-row">
+        <span class="mono bar-label">${esc(t.intent)}</span>
+        <span class="bar-track"><span class="bar-fill" style="width:${Math.max(2, t.confidence * 100)}%"></span></span>
+        <span class="mono bar-value">${t.confidence.toFixed(2)}</span>
+      </div>`).join('');
+
+    const s = r.steps;
+    const chips = (arr) => arr.map((w) => `<span class="token">${esc(w)}</span>`).join('');
+    document.getElementById('steps').innerHTML = `
+      <dt>1 · Normalised</dt><dd class="mono">${esc(s.normalised)}</dd>
+      <dt>2 · Tokens</dt><dd>${chips(s.tokens)}</dd>
+      <dt>3 · Stop-words removed</dt><dd>${chips(s.without_stop_words)}</dd>
+      <dt>4 · Lemmas → TF-IDF</dt><dd>${chips(s.lemmas)}</dd>`;
+  });
+
+  const progress = document.getElementById('train-progress');
+  const retrainButtons = [document.getElementById('retrain'), document.getElementById('retrain-inline')];
+  async function retrain() {
+    retrainButtons.forEach((b) => { b.disabled = true; });
+    progress.style.display = '';
+    try {
+      const res = await fetch('/api/model/train', { method: 'POST', headers: { 'X-CSRFToken': csrfToken() } });
+      if (!res.ok) throw new Error((await res.json()).error || res.statusText);
+      location.reload();
+    } catch (err) {
+      alert('Training failed: ' + err.message);
+      retrainButtons.forEach((b) => { b.disabled = false; });
+      progress.style.display = 'none';
+    }
+  }
+  retrainButtons.forEach((b) => b.addEventListener('click', retrain));
+</script>
+<script type="module" src="{{ url_for('static', filename='js/admin-intents.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Sign in{% endblock %}
+{% block public %}
+<div class="auth-page">
+  <section class="auth-hero">
+    <div class="brand"><span class="brand-mark"><md-icon>forum</md-icon></span>{{ app_name }}</div>
+    <div>
+      <h2>Your company's knowledge, one question away.</h2>
+      <p class="lead">Ask about policies, IT, products or processes. ConvoAI finds the answer in your
+        organisation's documents and shows you exactly where it came from.</p>
+    </div>
+    <ul class="feature-list">
+      <li><span class="f-icon"><md-icon>travel_explore</md-icon></span>
+        <div><strong>Grounded answers</strong><span>Every reply cites the document and page it used.</span></div></li>
+      <li><span class="f-icon"><md-icon>folder_shared</md-icon></span>
+        <div><strong>Department collections</strong><span>HR, IT, Sales and more, each with its own access.</span></div></li>
+      <li><span class="f-icon"><md-icon>lock</md-icon></span>
+        <div><strong>Runs on this computer</strong><span>Local models via Ollama. Your data never leaves the machine.</span></div></li>
+    </ul>
+  </section>
+
+  <section class="auth-panel">
+    <md-icon-button class="theme-corner" data-theme-toggle aria-label="Toggle theme"><md-icon>brightness_auto</md-icon></md-icon-button>
+    <div class="auth-card">
+      <div>
+        <h1>Sign in</h1>
+        <p class="muted">Use the account your administrator created for you.</p>
+      </div>
+      {% include "_flashes.html" %}
+      <form method="post" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <md-outlined-text-field label="Email" name="email" type="email" value="{{ email }}"
+                                autocomplete="username" required autofocus>
+          <md-icon slot="leading-icon">mail</md-icon>
+        </md-outlined-text-field>
+        <md-outlined-text-field id="password" label="Password" name="password" type="password"
+                                autocomplete="current-password" required>
+          <md-icon slot="leading-icon">key</md-icon>
+          <md-icon-button id="toggle-password" toggle slot="trailing-icon" type="button" aria-label="Show password">
+            <md-icon>visibility</md-icon>
+            <md-icon slot="selected">visibility_off</md-icon>
+          </md-icon-button>
+        </md-outlined-text-field>
+        <label class="check-row">
+          <md-checkbox name="remember" value="1" touch-target="wrapper"></md-checkbox>
+          Keep me signed in
+        </label>
+        <md-filled-button type="submit">
+          Sign in
+          <md-icon slot="icon">arrow_forward</md-icon>
+        </md-filled-button>
+      </form>
+      <p class="hint">First run? The admin password is in <span class="mono">data/admin_credentials.txt</span>.</p>
+    </div>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module">
+  const field = document.getElementById('password');
+  document.getElementById('toggle-password')?.addEventListener('click', (e) => {
+    field.type = e.currentTarget.selected ? 'text' : 'password';
+  });
+  // Submit on Enter from inside the web-component fields.
+  document.querySelectorAll('.auth-card md-outlined-text-field').forEach((f) =>
+    f.addEventListener('keydown', (e) => { if (e.key === 'Enter') f.form?.requestSubmit(); }));
+</script>
+{% endblock %}

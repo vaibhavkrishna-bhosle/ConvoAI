@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Admin overview{% endblock %}
+{% block heading %}Overview{% endblock %}
+{% block subheading %}<div class="subtitle">System status and knowledge base at a glance</div>{% endblock %}
+{% block content %}
+<div class="grid kpis">
+  {% for key, icon, label in [('documents','description','Documents'), ('collections','folder_shared','Collections'),
+                              ('users','group','Users'), ('intents','psychology','Intents'), ('messages','chat','Messages')] %}
+  <div class="card kpi">
+    <div class="kpi-label"><md-icon>{{ icon }}</md-icon>{{ label }}</div>
+    <div class="kpi-value">{{ counts[key] }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="grid two section-gap">
+  <div class="card">
+    <h2>System status</h2>
+    <div class="list" id="health">
+      <div class="list-row">
+        <div class="icon-tile"><md-icon>database</md-icon></div>
+        <div class="grow"><div>Database</div><div class="secondary mono">SQLite · convoai.db</div></div>
+        <span class="badge" data-health="db">Checking…</span>
+      </div>
+      <div class="list-row">
+        <div class="icon-tile"><md-icon>memory</md-icon></div>
+        <div class="grow"><div>Ollama</div><div class="secondary mono" data-health="host">—</div></div>
+        <span class="badge" data-health="ollama">Checking…</span>
+      </div>
+      <div class="list-row">
+        <div class="icon-tile"><md-icon>smart_toy</md-icon></div>
+        <div class="grow">
+          <div>Chat model</div>
+          <div class="secondary mono">{{ settings.llm_model }} · fallback {{ settings.llm_fallback_model }}</div>
+        </div>
+        <span class="badge" data-model="{{ settings.llm_model }}">—</span>
+      </div>
+      <div class="list-row">
+        <div class="icon-tile"><md-icon>hub</md-icon></div>
+        <div class="grow"><div>Embedding model</div><div class="secondary mono">{{ settings.embed_model }}</div></div>
+        <span class="badge" data-model="{{ settings.embed_model }}">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Collections</h2>
+    <div class="list">
+      {% for c in collections %}
+      <div class="list-row">
+        <div class="icon-tile" style="background: color-mix(in srgb, {{ c.color }} 22%, var(--md-sys-color-surface)); color: {{ c.color }}">
+          <md-icon>{{ c.icon }}</md-icon>
+        </div>
+        <div class="grow"><div>{{ c.name }}</div><div class="secondary">{{ c.description }}</div></div>
+        <span class="badge">{{ c.doc_count }} doc{{ '' if c.doc_count == 1 else 's' }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<div class="card section-gap">
+  <h2>Admin sections</h2>
+  <div class="list">
+    {% for key, (title, icon, blurb) in sections.items() %}
+    <a class="list-row" href="{{ url_for('admin.' + key) }}">
+      <div class="icon-tile"><md-icon>{{ icon }}</md-icon></div>
+      <div class="grow"><div>{{ title }}</div><div class="secondary">{{ blurb }}</div></div>
+      <md-icon class="muted">chevron_right</md-icon>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module">
+  const set = (sel, text, cls) => {
+    document.querySelectorAll(sel).forEach((el) => { el.textContent = text; if (cls) el.className = 'badge ' + cls; });
+  };
+  try {
+    const res = await fetch('/api/health');
+    const h = await res.json();
+    set('[data-health="db"]', h.database.ok ? 'Online' : 'Error', h.database.ok ? 'ok' : 'err');
+    set('[data-health="ollama"]', h.ollama.ok ? 'Running' : 'Not reachable', h.ollama.ok ? 'ok' : 'err');
+    document.querySelector('[data-health="host"]').textContent = h.ollama.host;
+    const installed = h.ollama.models || [];
+    document.querySelectorAll('[data-model]').forEach((el) => {
+      const want = el.dataset.model;
+      const ok = installed.some((m) => m === want || m === want + ':latest');
+      el.textContent = ok ? 'Installed' : 'Missing';
+      el.className = 'badge ' + (ok ? 'ok' : 'err');
+    });
+  } catch (e) {
+    set('[data-health]', 'Error', 'err');
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}Model metrics{% endblock %}
+{% block heading %}Model metrics{% endblock %}
+{% block subheading %}<div class="subtitle">How well the intent classifier and document retrieval perform on held-out test questions</div>{% endblock %}
+{% block head %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+{% endblock %}
+{% macro chart_head(title, subtitle='', toggle=true) -%}
+  <div class="chart-head">
+    <div class="grow"><h2>{{ title }}</h2>{% if subtitle %}<div class="muted chart-sub">{{ subtitle }}</div>{% endif %}</div>
+    {% if toggle %}
+    <md-icon-button toggle data-table-toggle aria-label="Show as table" title="Show as table">
+      <md-icon>table_rows</md-icon><md-icon slot="selected">bar_chart</md-icon>
+    </md-icon-button>
+    {% endif %}
+  </div>
+{%- endmacro %}
+{% block content %}
+<!-- ============================ Intent classifier -->
+<div class="section-title">
+  <h2><md-icon>psychology</md-icon>Intent classifier</h2>
+  <span class="muted" id="intent-trained"></span>
+  <md-text-button href="/admin/intents"><md-icon slot="icon">open_in_new</md-icon>Intents &amp; retrain</md-text-button>
+</div>
+<div class="flash warn-flash" id="intent-dirty" hidden><md-icon>model_training</md-icon>
+  <span class="flash-text">Intents were edited after this model was trained, so these numbers describe the previous version.</span></div>
+<div id="intent-missing" class="flash" hidden><md-icon>info</md-icon><span class="flash-text">No classifier report yet. Train the model on the Intents page.</span></div>
+
+<div id="intent-section">
+  <div class="card">
+    {{ chart_head('Model comparison', 'Stratified 5-fold cross-validation on the training patterns, and the held-out test set (macro averages)', toggle=False) }}
+    <div class="table-wrap"><table class="data-table" id="compare-table"></table></div>
+  </div>
+
+  <div class="grid two section-gap">
+    <div class="card" id="card-sweep">
+      {{ chart_head('Choosing the confidence threshold', 'Held-out set: what happens at each threshold') }}
+      <div class="legend" id="sweep-legend"></div>
+      <div class="chart-box" style="height:280px"><canvas id="chart-sweep" aria-label="Threshold sweep"></canvas></div>
+      <p class="muted chart-note" id="sweep-note"></p>
+    </div>
+    <div class="card">
+      {{ chart_head('Per-intent F1', 'Cross-validation, weakest first', toggle=False) }}
+      <div class="table-wrap" style="max-height: 380px"><table class="data-table compact" id="f1-table"></table></div>
+    </div>
+  </div>
+
+  <div class="card section-gap">
+    <div class="chart-head">
+      <div class="grow"><h2>Confusion matrix</h2><div class="muted chart-sub">Rows are the true intent, columns the prediction; the outlined diagonal is correct. Hover a cell for details.</div></div>
+      <md-chip-set id="cm-chips" aria-label="Data set">
+        <md-filter-chip label="Cross-validation" data-set="cv" selected></md-filter-chip>
+        <md-filter-chip label="Held-out" data-set="test"></md-filter-chip>
+      </md-chip-set>
+    </div>
+    <div class="heatmap-wrap"><table class="heatmap" id="heatmap"></table></div>
+    <div class="scale-legend"><span>0</span><span class="ramp"></span><span id="cm-max"></span><span>predictions (square-root colour scale, so small confusions stay visible)</span></div>
+  </div>
+
+  <div class="card section-gap">
+    {{ chart_head('Held-out mistakes', 'Test phrasings the active model got wrong', toggle=False) }}
+    <div class="table-wrap"><table class="data-table compact" id="errors-table"></table></div>
+  </div>
+</div>
+
+<!-- ============================ Retrieval -->
+<div class="section-title" style="margin-top: 32px">
+  <h2><md-icon>travel_explore</md-icon>Document retrieval</h2>
+  <span class="muted" id="rag-evaluated"></span>
+  <md-filled-tonal-button id="run-rag"><md-icon slot="icon">play_arrow</md-icon>Re-run evaluation</md-filled-tonal-button>
+</div>
+<md-linear-progress id="rag-progress" indeterminate hidden></md-linear-progress>
+<div id="rag-missing" class="flash" hidden><md-icon>info</md-icon><span class="flash-text">No retrieval evaluation yet. Click <strong>Re-run evaluation</strong> (Ollama must be running).</span></div>
+
+<div id="rag-section">
+  <div class="card">
+    {{ chart_head('Search modes compared', 'Did the right chunk come back? Gold set in data/rag_eval.json', toggle=False) }}
+    <div class="table-wrap"><table class="data-table" id="rag-table"></table></div>
+  </div>
+
+  <div class="card section-gap" id="card-gate">
+    {{ chart_head('“Not found” threshold', 'Best similarity for each test question. Answerable questions should sit right of the line, off-topic ones left.') }}
+    <div class="legend" id="gate-legend"></div>
+    <div class="chart-box" style="height:220px"><canvas id="chart-gate" aria-label="Relevance gate"></canvas></div>
+    <p class="muted chart-note" id="gate-note"></p>
+  </div>
+
+  <div class="card section-gap">
+    {{ chart_head('Retrieval misses', 'Questions whose expected passage was not in the top results (hybrid search)', toggle=False) }}
+    <div class="table-wrap"><table class="data-table compact" id="misses-table"></table></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/admin-metrics.js') }}"></script>
+{% endblock %}

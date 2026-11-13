@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block heading %}Analytics{% endblock %}
+{% block subheading %}<div class="subtitle">How ConvoAI is being used, computed from the chat history on this computer</div>{% endblock %}
+{% block head %}
+<script src="{{ url_for('static', filename='vendor/chart.umd.min.js') }}"></script>
+{% endblock %}
+{% macro chart_head(title, subtitle='', toggle=true) -%}
+  <div class="chart-head">
+    <div class="grow"><h2>{{ title }}</h2>{% if subtitle %}<div class="muted chart-sub">{{ subtitle }}</div>{% endif %}</div>
+    {% if toggle %}
+    <md-icon-button toggle data-table-toggle aria-label="Show as table" title="Show as table">
+      <md-icon>table_rows</md-icon><md-icon slot="selected">bar_chart</md-icon>
+    </md-icon-button>
+    {% endif %}
+  </div>
+{%- endmacro %}
+{% block content %}
+<!-- One filter row scopes everything below -->
+<div class="filter-row">
+  <md-chip-set id="range-chips" aria-label="Time range">
+    <md-filter-chip label="Last 7 days" data-days="7"></md-filter-chip>
+    <md-filter-chip label="Last 30 days" data-days="30" selected></md-filter-chip>
+    <md-filter-chip label="Last 90 days" data-days="90"></md-filter-chip>
+    <md-filter-chip label="All time" data-days="0"></md-filter-chip>
+  </md-chip-set>
+  <span class="muted" id="updated" aria-live="polite"></span>
+</div>
+
+<div id="dash" class="dash">
+  <div class="grid kpis" id="kpis"></div>
+
+  <div class="card section-gap" id="card-mix">
+    {{ chart_head('How questions were answered', 'Share of answers by route', toggle=False) }}
+    <div class="segbar" id="segbar" role="img"></div>
+    <div class="legend" id="mix-legend"></div>
+  </div>
+
+  <div class="card section-gap" id="card-daily">
+    {{ chart_head('Answers per day', 'Stacked by how each question was answered') }}
+    <div class="legend" id="daily-legend"></div>
+    <div class="chart-box" style="height:260px"><canvas id="chart-daily" aria-label="Answers per day by route"></canvas></div>
+  </div>
+
+  <div class="grid two section-gap">
+    <div class="card" id="card-docs">
+      {{ chart_head('Most-cited documents', 'Answers that cited each document') }}
+      <div class="chart-box"><canvas id="chart-docs" aria-label="Most-cited documents"></canvas></div>
+    </div>
+    <div class="card" id="card-intents">
+      {{ chart_head('Top quick replies', 'Small-talk intents answered instantly') }}
+      <div class="chart-box"><canvas id="chart-intents" aria-label="Top intents"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid two section-gap">
+    <div class="card" id="card-collections">
+      {{ chart_head('Questions by collection', 'Which collection the chat was searching') }}
+      <div class="chart-box"><canvas id="chart-collections" aria-label="Questions by collection"></canvas></div>
+    </div>
+    <div class="card">
+      {{ chart_head('Response time', 'From sending a question to the full answer', toggle=False) }}
+      <div class="table-wrap"><table class="data-table compact" id="latency-table"></table></div>
+      <p class="muted chart-note">Document answers start appearing after ~1–2 s; this is the time to the last word.</p>
+    </div>
+  </div>
+
+  <div class="card section-gap">
+    {{ chart_head('Content gaps', 'Questions the documents couldn’t answer: upload a document that covers them', toggle=False) }}
+    <div class="table-wrap"><table class="data-table compact" id="gaps-table"></table></div>
+  </div>
+
+  <div class="card section-gap">
+    {{ chart_head('Answers marked 👎', 'Most recent first', toggle=False) }}
+    <div class="table-wrap"><table class="data-table compact" id="disliked-table"></table></div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/admin-analytics.js') }}"></script>
+{% endblock %}

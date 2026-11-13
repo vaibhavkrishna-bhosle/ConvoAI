@@ -1,0 +1,16 @@
+{
+  "name": "convoai-vendor-build",
+  "private": true,
+  "description": "One-time bundler for offline frontend assets (Material Web, Chart.js, fonts). Run: npm install && npm run build",
+  "scripts": { "build": "node build.mjs" },
+  "devDependencies": {
+    "@material/web": "2.4.0",
+    "lit": "3.3.1",
+    "esbuild": "0.25.10",
+    "chart.js": "4.5.0",
+    "marked": "16.3.0",
+    "@fontsource/roboto": "5.2.8",
+    "@fontsource-variable/inter": "5.2.8",
+    "material-symbols": "0.36.0"
+  }
+}

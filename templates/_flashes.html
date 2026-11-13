@@ -1,0 +1,13 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-stack" role="status">
+    {% for category, message in messages %}
+      <div class="flash {{ category }}">
+        <md-icon>{{ 'error' if category == 'error' else 'info' }}</md-icon>
+        <span class="flash-text">{{ message }}</span>
+        <md-icon-button data-dismiss-flash aria-label="Dismiss"><md-icon>close</md-icon></md-icon-button>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Collections{% endblock %}
+{% block heading %}Collections{% endblock %}
+{% block subheading %}<div class="subtitle">Group documents by department. Chat can search one collection or all of them.</div>{% endblock %}
+{% block appbar_actions %}
+  <md-filled-button id="new-collection"><md-icon slot="icon">create_new_folder</md-icon>New collection</md-filled-button>
+{% endblock %}
+{% block content %}
+<div class="collection-grid" id="collection-grid"></div>
+
+<md-dialog id="collection-dialog">
+  <div slot="headline" id="collection-dialog-title">New collection</div>
+  <form slot="content" id="collection-form" method="dialog" class="dialog-form">
+    <md-outlined-text-field id="c-name" label="Name" maxlength="40" required></md-outlined-text-field>
+    <md-outlined-text-field id="c-description" label="Description" maxlength="200" type="textarea" rows="2"></md-outlined-text-field>
+    <div>
+      <div class="field-label">Icon</div>
+      <div class="icon-picker" id="c-icons" role="radiogroup" aria-label="Icon"></div>
+    </div>
+    <div>
+      <div class="field-label">Colour</div>
+      <div class="color-picker" id="c-colors" role="radiogroup" aria-label="Colour"></div>
+    </div>
+    <div id="c-error" class="field-error" hidden></div>
+  </form>
+  <div slot="actions">
+    <md-text-button form="collection-form" value="cancel">Cancel</md-text-button>
+    <md-filled-button id="c-save">Save</md-filled-button>
+  </div>
+</md-dialog>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/admin-collections.js') }}"></script>
+{% endblock %}

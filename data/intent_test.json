@@ -1,0 +1,405 @@
+{
+  "notes": "Held-out evaluation set: phrasings that do NOT appear in intents.json. Used to report generalisation accuracy and tune the confidence threshold. The last block is unfamiliar/out-of-scope questions: they must NOT get a canned reply, so their expected route is doc_query (RAG answers or politely declines).",
+  "samples": [
+    [
+      "hey hey",
+      "greeting"
+    ],
+    [
+      "hello convo",
+      "greeting"
+    ],
+    [
+      "good evening to you",
+      "greeting"
+    ],
+    [
+      "hi, are you there?",
+      "greeting"
+    ],
+    [
+      "heyyy",
+      "greeting"
+    ],
+    [
+      "ok bye now",
+      "goodbye"
+    ],
+    [
+      "see ya",
+      "goodbye"
+    ],
+    [
+      "i have to go now",
+      "goodbye"
+    ],
+    [
+      "later!",
+      "goodbye"
+    ],
+    [
+      "thank u so much",
+      "thanks"
+    ],
+    [
+      "thanks, that solved it",
+      "thanks"
+    ],
+    [
+      "really appreciate your help",
+      "thanks"
+    ],
+    [
+      "thnx",
+      "thanks"
+    ],
+    [
+      "how is it going",
+      "how_are_you"
+    ],
+    [
+      "how are u today",
+      "how_are_you"
+    ],
+    [
+      "hope you are doing well",
+      "how_are_you"
+    ],
+    [
+      "what exactly are you",
+      "bot_identity"
+    ],
+    [
+      "am i chatting with a machine",
+      "bot_identity"
+    ],
+    [
+      "do you have a name",
+      "bot_identity"
+    ],
+    [
+      "what are you able to do",
+      "bot_capabilities"
+    ],
+    [
+      "what kind of help can you give",
+      "bot_capabilities"
+    ],
+    [
+      "what are your skills",
+      "bot_capabilities"
+    ],
+    [
+      "who programmed you",
+      "bot_creator"
+    ],
+    [
+      "who is behind this bot",
+      "bot_creator"
+    ],
+    [
+      "how do i ask you something",
+      "help_usage"
+    ],
+    [
+      "i don't know how this works",
+      "help_usage"
+    ],
+    [
+      "need some help here",
+      "help_usage"
+    ],
+    [
+      "what collections are available",
+      "collections_info"
+    ],
+    [
+      "what knowledge do you have",
+      "collections_info"
+    ],
+    [
+      "what topics can i search",
+      "collections_info"
+    ],
+    [
+      "how can i upload documents",
+      "upload_docs"
+    ],
+    [
+      "can i give you a new file",
+      "upload_docs"
+    ],
+    [
+      "how to add a document",
+      "upload_docs"
+    ],
+    [
+      "let me talk to a real human",
+      "human_handoff"
+    ],
+    [
+      "can someone from support call me",
+      "human_handoff"
+    ],
+    [
+      "i want a person not a bot",
+      "human_handoff"
+    ],
+    [
+      "yes please",
+      "affirm"
+    ],
+    [
+      "yup",
+      "affirm"
+    ],
+    [
+      "sure thing",
+      "affirm"
+    ],
+    [
+      "okay sounds good",
+      "affirm"
+    ],
+    [
+      "no thanks i'm fine",
+      "deny"
+    ],
+    [
+      "not needed",
+      "deny"
+    ],
+    [
+      "nah forget it",
+      "deny"
+    ],
+    [
+      "you're very helpful",
+      "compliment"
+    ],
+    [
+      "great job bot",
+      "compliment"
+    ],
+    [
+      "you are so smart",
+      "compliment"
+    ],
+    [
+      "this bot is useless",
+      "frustration"
+    ],
+    [
+      "that answer is wrong",
+      "frustration"
+    ],
+    [
+      "you aren't helping at all",
+      "frustration"
+    ],
+    [
+      "got any jokes",
+      "joke"
+    ],
+    [
+      "say a joke",
+      "joke"
+    ],
+    [
+      "make me smile",
+      "joke"
+    ],
+    [
+      "hahaha good one",
+      "laugh"
+    ],
+    [
+      "lol",
+      "laugh"
+    ],
+    [
+      "what's the time right now",
+      "current_time"
+    ],
+    [
+      "tell me current time",
+      "current_time"
+    ],
+    [
+      "what's today's date",
+      "current_date"
+    ],
+    [
+      "which date is it",
+      "current_date"
+    ],
+    [
+      "is it going to rain",
+      "weather"
+    ],
+    [
+      "how hot is it today",
+      "weather"
+    ],
+    [
+      "are my chats private",
+      "privacy"
+    ],
+    [
+      "is my information secure here",
+      "privacy"
+    ],
+    [
+      "can i speak my question",
+      "voice_help"
+    ],
+    [
+      "does voice work",
+      "voice_help"
+    ],
+    [
+      "can you reply in hindi",
+      "language"
+    ],
+    [
+      "do you support other languages",
+      "language"
+    ],
+    [
+      "clear everything and start again",
+      "reset_chat"
+    ],
+    [
+      "start a new chat",
+      "reset_chat"
+    ],
+    [
+      "how many earned leaves can i take",
+      "doc_query"
+    ],
+    [
+      "what is the policy for working from home on fridays",
+      "doc_query"
+    ],
+    [
+      "how do i reset my email password",
+      "doc_query"
+    ],
+    [
+      "the vpn keeps disconnecting what should i do",
+      "doc_query"
+    ],
+    [
+      "what is the maximum discount for small businesses",
+      "doc_query"
+    ],
+    [
+      "how much does the basic plan cost",
+      "doc_query"
+    ],
+    [
+      "when will i get my salary this month",
+      "doc_query"
+    ],
+    [
+      "who do i contact for payroll issues",
+      "doc_query"
+    ],
+    [
+      "what is the process to request a new laptop",
+      "doc_query"
+    ],
+    [
+      "what are the steps for onboarding a new hire",
+      "doc_query"
+    ],
+    [
+      "how many days of paternity leave",
+      "doc_query"
+    ],
+    [
+      "what is the reimbursement limit for client dinners",
+      "doc_query"
+    ],
+    [
+      "is there a gym allowance",
+      "doc_query"
+    ],
+    [
+      "what does the policy say about using personal devices",
+      "doc_query"
+    ],
+    [
+      "how should i handle a refund request",
+      "doc_query"
+    ],
+    [
+      "what are the support hours for enterprise customers",
+      "doc_query"
+    ],
+    [
+      "can i work from goa for a month",
+      "doc_query"
+    ],
+    [
+      "tell me about kubernetes",
+      "doc_query"
+    ],
+    [
+      "asdfgh qwerty",
+      "doc_query"
+    ],
+    [
+      "what is the capital of france",
+      "doc_query"
+    ],
+    [
+      "the printer on floor 3 is jammed",
+      "doc_query"
+    ],
+    [
+      "how do i claim medical expenses",
+      "doc_query"
+    ],
+    [
+      "what's 2+2",
+      "doc_query"
+    ],
+    [
+      "who won the cricket match yesterday",
+      "doc_query"
+    ],
+    [
+      "explain the leave encashment rule",
+      "doc_query"
+    ],
+    [
+      "is the cafeteria open on saturday",
+      "doc_query"
+    ],
+    [
+      "write me a poem about the office",
+      "doc_query"
+    ],
+    [
+      "can i get an advance on my salary",
+      "doc_query"
+    ],
+    [
+      "my badge stopped working",
+      "doc_query"
+    ],
+    [
+      "what is our policy on moonlighting",
+      "doc_query"
+    ],
+    [
+      "recommend a good book",
+      "doc_query"
+    ],
+    [
+      "how many people work here",
+      "doc_query"
+    ]
+  ]
+}

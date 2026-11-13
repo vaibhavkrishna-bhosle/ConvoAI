@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}{{ app_name }}{% endblock %} · {{ app_name }}</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23006a6a'/%3E%3Cpath d='M9 11h14v8h-7l-4 3v-3H9z' fill='white'/%3E%3C/svg%3E">
+  <script>
+    // Apply the saved theme before first paint (server preference wins, then this browser's).
+    (function () {
+      var pref = {{ (current_user.theme if current_user.is_authenticated else '') | tojson }};
+      if (!pref) { try { pref = localStorage.getItem('convoai-theme'); } catch (e) {} }
+      pref = pref || 'system';
+      var root = document.documentElement;
+      root.dataset.themePref = pref;
+      if (pref !== 'system') root.setAttribute('data-theme', pref);
+    })();
+  </script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/fonts.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script type="module" src="{{ url_for('static', filename='vendor/material-web.js') }}"></script>
+  <script type="module" src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  {% block head %}{% endblock %}
+</head>
+<body data-auth="{{ '1' if current_user.is_authenticated else '0' }}">
+{% if current_user.is_authenticated %}
+  {% set ep = request.endpoint or '' %}
+  {% set nav_main = [('chat.index', 'chat', 'Chat', true)] %}
+  {% set nav_admin = [
+      ('admin.index', 'space_dashboard', 'Overview', true, None),
+      ('admin.documents', 'description', 'Documents', true, None),
+      ('admin.collections', 'folder_shared', 'Collections', false, None),
+      ('admin.users', 'manage_accounts', 'Users', false, None),
+      ('admin.intents', 'psychology', 'Intents', false, None),
+      ('admin.analytics', 'monitoring', 'Analytics', true, None),
+      ('admin.metrics', 'query_stats', 'Metrics', false, None),
+      ('admin.settings', 'tune', 'Settings', true, None),
+  ] %}
+  {% macro nav_link(endpoint, icon, label, section=None, mobile=true) -%}
+    {% set href = url_for(endpoint, section=section) if section else url_for(endpoint) %}
+    {% set active = (ep == endpoint and (not section or request.view_args.get('section') == section)) %}
+    <a class="nav-item{{ ' active' if active }}{{ '' if mobile else ' desktop-only' }}" href="{{ href }}"
+       {% if active %}aria-current="page"{% endif %}>
+      <span class="nav-indicator"><md-icon>{{ icon }}</md-icon><md-ripple></md-ripple></span>
+      <span>{{ label }}</span>
+    </a>
+  {%- endmacro %}
+
+  <div class="app-shell">
+    <nav class="nav-rail" aria-label="Main">
+      <a class="nav-logo" href="{{ url_for('chat.index') }}" aria-label="{{ app_name }} home">
+        <md-icon>forum</md-icon>
+      </a>
+      {% for e, i, l, m in nav_main %}{{ nav_link(e, i, l) }}{% endfor %}
+      {% if current_user.is_admin %}
+        <div class="nav-section-label">Admin</div>
+        {% for e, i, l, m, s in nav_admin %}{{ nav_link(e, i, l, s) }}{% endfor %}
+      {% endif %}
+    </nav>
+
+    <div class="main-area">
+      <header class="top-app-bar">
+        <div class="title">
+          <h1>{% block heading %}{{ app_name }}{% endblock %}</h1>
+          {% block subheading %}{% endblock %}
+        </div>
+        {% block appbar_actions %}{% endblock %}
+        <md-icon-button data-theme-toggle aria-label="Toggle theme"><md-icon>brightness_auto</md-icon></md-icon-button>
+        <span class="menu-anchor">
+          <button id="account-button" class="avatar" aria-haspopup="menu" aria-label="Account menu">{{ current_user.initials }}</button>
+          <md-menu id="account-menu" anchor="account-button" positioning="popover" anchor-corner="end-end" menu-corner="start-end">
+            <div class="menu-header" slot="header">
+              <div class="name">{{ current_user.name }}</div>
+              <div class="email">{{ current_user.email }}</div>
+              <div style="margin-top:6px"><span class="badge {{ 'primary' if current_user.is_admin }}">{{ current_user.role|capitalize }}</span></div>
+            </div>
+            <md-divider role="separator" tabindex="-1"></md-divider>
+            {% if login_required %}
+            <md-menu-item id="menu-signout">
+              <md-icon slot="start">logout</md-icon>
+              <div slot="headline">Sign out</div>
+            </md-menu-item>
+            {% else %}
+            <md-menu-item disabled>
+              <md-icon slot="start">computer</md-icon>
+              <div slot="headline">Local mode · no sign-in</div>
+            </md-menu-item>
+            {% endif %}
+          </md-menu>
+        </span>
+        {% if login_required %}
+        <form id="signout-form" method="post" action="{{ url_for('auth.logout') }}" hidden>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        </form>
+        {% endif %}
+      </header>
+
+      <main class="page">
+        {% include "_flashes.html" %}
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Main (mobile)">
+    {% for e, i, l, m in nav_main %}{{ nav_link(e, i, l) }}{% endfor %}
+    {% if current_user.is_admin %}
+      {% for e, i, l, m, s in nav_admin %}{{ nav_link(e, i, l, s, m) }}{% endfor %}
+    {% endif %}
+  </nav>
+{% else %}
+  {% block public %}{% endblock %}
+{% endif %}
+<script type="module" src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

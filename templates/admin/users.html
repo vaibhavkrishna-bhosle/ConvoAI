@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block heading %}Users{% endblock %}
+{% block subheading %}<div class="subtitle">Accounts, roles and which collections each person can search</div>{% endblock %}
+{% block appbar_actions %}
+  <md-filled-button id="new-user"><md-icon slot="icon">person_add</md-icon>New user</md-filled-button>
+{% endblock %}
+{% block content %}
+{% if not login_required %}
+<div class="flash">
+  <md-icon>info</md-icon>
+  <span class="flash-text">Sign-in is off (local mode), so everyone using this computer is the local admin.
+    These accounts and their collection access take effect when you set <span class="mono">LOGIN_REQUIRED=1</span> in <span class="mono">.env</span> and restart.</span>
+</div>
+{% endif %}
+<div class="card">
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Role</th><th>Can search</th><th>Last sign-in</th><th>Chats</th><th aria-label="Actions"></th></tr></thead>
+      <tbody id="user-rows"></tbody>
+    </table>
+  </div>
+</div>
+
+<md-dialog id="user-dialog">
+  <div slot="headline" id="user-dialog-title">New user</div>
+  <form slot="content" id="user-form" method="dialog" class="dialog-form">
+    <md-outlined-text-field id="u-name" label="Full name" maxlength="80" required></md-outlined-text-field>
+    <md-outlined-text-field id="u-email" label="Email" type="email" maxlength="120" required></md-outlined-text-field>
+    <md-outlined-text-field id="u-password" label="Password" type="password" minlength="8" autocomplete="new-password"></md-outlined-text-field>
+    <div class="form-row">
+      <md-outlined-select id="u-role" label="Role">
+        <md-select-option value="user" selected><div slot="headline">User</div></md-select-option>
+        <md-select-option value="admin"><div slot="headline">Admin</div></md-select-option>
+      </md-outlined-select>
+      <label class="switch-row"><md-switch id="u-active" selected></md-switch> Active</label>
+    </div>
+    <div>
+      <div class="field-label">Collections this person can search</div>
+      <div class="check-grid" id="u-collections">
+        {% for c in collections %}
+        <label class="check-row"><md-checkbox value="{{ c.id }}" touch-target="wrapper"></md-checkbox>
+          <md-icon style="color: {{ c.color }}">{{ c.icon }}</md-icon>{{ c.name }}</label>
+        {% endfor %}
+      </div>
+      <div class="muted" id="u-admin-note" style="font-size:13px" hidden>Admins can search every collection.</div>
+    </div>
+    <div id="u-error" class="field-error" hidden></div>
+  </form>
+  <div slot="actions">
+    <md-text-button form="user-form" value="cancel">Cancel</md-text-button>
+    <md-filled-button id="u-save">Save</md-filled-button>
+  </div>
+</md-dialog>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/admin-users.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block heading %}Settings{% endblock %}
+{% block subheading %}<div class="subtitle">Models, retrieval and voice. Changes apply to the next question.</div>{% endblock %}
+{% block appbar_actions %}
+  <md-text-button id="reset"><md-icon slot="icon">restart_alt</md-icon>Reset to defaults</md-text-button>
+  <md-filled-button id="save" disabled><md-icon slot="icon">save</md-icon>Save</md-filled-button>
+{% endblock %}
+{% block content %}
+<div class="flash warn-flash" id="reindex-banner" hidden>
+  <md-icon>sync_problem</md-icon>
+  <span class="flash-text" id="reindex-text"></span>
+  <md-filled-tonal-button id="reindex-all">Re-index all documents</md-filled-tonal-button>
+</div>
+<div class="flash error" id="ollama-banner" hidden>
+  <md-icon>cloud_off</md-icon>
+  <span class="flash-text">Ollama isn't reachable, so model names can't be checked. Start it with <span class="mono">ollama serve</span>.</span>
+</div>
+<div class="settings-groups" id="settings-groups"></div>
+{% endblock %}
+{% block scripts %}
+<script type="module" src="{{ url_for('static', filename='js/admin-settings.js') }}"></script>
+{% endblock %}
