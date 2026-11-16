@@ -8,20 +8,34 @@ echo  ConvoAI setup  (safe to run again: finished steps are skipped)
 echo ============================================================
 echo.
 
-rem ---------------------------------------------------------------- 1. Python 3.11
-py -3.11 --version >nul 2>&1
-if errorlevel 1 (
-  echo [X] Python 3.11 was not found.
-  echo     Install it from https://www.python.org/downloads/release/python-3119/
+rem ---------------------------------------------------------------- 1. Find any Python 3
+set "PY="
+where py >nul 2>&1 && (
+  py -3 --version >nul 2>&1 && set "PY=py -3"
+)
+if not defined PY (
+  where python >nul 2>&1 && (
+    python -c "import sys; raise SystemExit(0 if sys.version_info[0] >= 3 else 1)" >nul 2>&1 && set "PY=python"
+  )
+)
+if not defined PY (
+  where python3 >nul 2>&1 && (
+    python3 -c "import sys; raise SystemExit(0 if sys.version_info[0] >= 3 else 1)" >nul 2>&1 && set "PY=python3"
+  )
+)
+if not defined PY (
+  echo [X] Python 3 was not found.
+  echo     Install it from https://www.python.org/downloads/
   echo     ^(tick "Add python.exe to PATH"^), then run setup.bat again.
   goto :fail
 )
-echo [1/8] Python 3.11 found.
+for /f "tokens=*" %%v in ('%PY% --version 2^>^&1') do set "PYVER=%%v"
+echo [1/8] %PYVER% found ^(%PY%^).
 
 rem ---------------------------------------------------------------- 2. virtual environment
 if not exist ".venv\Scripts\python.exe" (
   echo [2/8] Creating the virtual environment...
-  py -3.11 -m venv .venv || goto :fail
+  %PY% -m venv .venv || goto :fail
 ) else (
   echo [2/8] Virtual environment already exists.
 )
